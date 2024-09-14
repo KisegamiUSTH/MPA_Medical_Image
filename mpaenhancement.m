@@ -8,7 +8,6 @@ function enhanced_img = mpaenhancement(input_img)
 
     % Visualize CLAHE result in a new figure window
     figure();
-
     subplot(1, 2, 1);
     imshow(input_img, []);
     title('Input Image (Before CLAHE)');
@@ -31,6 +30,10 @@ function enhanced_img = mpaenhancement(input_img)
     imshow(edge_img, []);
     title('Enhanced Image (Edge Detection)');
 
+    % GPU Initialization
+    ag = gpuDeviceCount;
+    dg = gpuDevice;
+
     % Apply DN-CNN denoising
     net = denoisingNetwork('dncnn');
     denoised_img = denoiseImage(input_img, net);
@@ -49,9 +52,9 @@ function enhanced_img = mpaenhancement(input_img)
 
     % Define MPA parameters
     populationSize = 200;
-    numGenerations = 100;
-    lowerBound = 0;
-    upperBound = 5;
+    numGenerations = 50;
+    lowerBound = 0.1;
+    upperBound = 1.6;
 
     % Initialize MPA variables
     bestSolution = [];
@@ -68,21 +71,21 @@ function enhanced_img = mpaenhancement(input_img)
         % Find the best solution and its fitness
         [currentBestFitness, bestIndex] = min(fitness);
 
-        % Display the best fitness for the current generation
-        fprintf('Generation %d: Best Fitness = %f\n', generation, currentBestFitness);
-
         % Update the best solution if a better one is found
         if currentBestFitness < bestFitness
             bestFitness = currentBestFitness;
             bestSolution = population(bestIndex, :);
         end
+        
+        % Print the best fitness value for the current generation
+        fprintf('Generation %d: Best Fitness = %f\n', generation, bestFitness);
     end
 
     % Apply the optimal parameters to enhance the image
     beta_1 = bestSolution(1);
     beta_2 = bestSolution(2);
     beta_3 = bestSolution(3);
-    enhanced_img = beta_1 * clahe_img + beta_2 * edge_img + beta_3 * denoised_img;
+    enhanced_img = 2 * beta_1 * clahe_img + 1 * beta_2 * edge_img + 0.5 * beta_3 * denoised_img;
 end
 
 function fitness = evaluateFitness(population, clahe_img, edge_img, denoised_img, input_img)
