@@ -2,7 +2,7 @@ clear all
 clc
 
 %% Load Input Image
-input_img = im2double(imread('070T.png'));  % Changed to imread for PNG
+input_img = im2double(imread('070C.png'));  % Changed to imread for PNG
 
 %% Enhance Image Using MPA
 tech_21 = mpaenhancement(input_img);
